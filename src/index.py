@@ -15,12 +15,13 @@ import orgparse
 from orgparse import OrgNode
 from orgparse.date import OrgDate
 
-from config import PROJECT_ROOT_DIR, OPENAI_API_KEY
+from config import PROJECT_ROOT_DIR, OPENAI_API_KEY, OPENAI_EMBEDDING_MODEL
 from langchain_core.documents import Document
 
 
 OPENAI_EMBEDDINGS = OpenAIEmbeddings(
     openai_api_key=OPENAI_API_KEY,
+    model=OPENAI_EMBEDDING_MODEL,
 )
 NOTE_DOC_COLLECTION_NAME = "notes_v1"
 NOTE_INDEX_CHROMA_CLIENT_SETTINGS = chromadb.config.Settings(
@@ -149,6 +150,7 @@ def build_search_index_and_embeddings(path: str) -> None:
         documents=documents,
         embedding=OpenAIEmbeddings(
             openai_api_key=OPENAI_API_KEY,
+            model=OPENAI_EMBEDDING_MODEL,
         ),
     )
 
