@@ -20,7 +20,7 @@ from langchain_community.tools.playwright.utils import (
 
 from config import OPENAI_API_KEY, SERP_API_KEY
 from index import search_index
-from retrievers import NoteVectorStore
+#from retrievers import NoteVectorStore
 
 
 set_verbose(False)
@@ -55,11 +55,20 @@ NOTES_CHAIN = create_stuff_documents_chain(
 
 
 def gpt_answer_notes(question: str) -> str:
-    index = NoteVectorStore(api_url="http://localhost:2222")
-    rag_chain = create_retrieval_chain(index.as_retriever(), NOTES_CHAIN)
+    """
+    Answer a question using the *local* Chroma index built by
+    `src/index.py`.  No external service required.
+    """
+    # 1 · open the persistent vector store in ./index/
+    vector_store = search_index()  # Chroma instance defined in src/index.py :contentReference[oaicite:0]{index=0}
+
+    # 2 · set up a retriever (top‑6 chunks is a good default)
+    retriever = vector_store.as_retriever(search_kwargs={"k": 6})
+
+    # 3 · RAG chain → GPT‑4o for the final answer
+    rag_chain = create_retrieval_chain(retriever, NOTES_CHAIN)
     result: str = rag_chain.invoke({"input": question})
     return result
-
 
 ORGQL_TEMPLATE = """
 You are an AI assistant designed to help convert natural language questions into org-ql queries for use with Org mode in Emacs. org-ql queries are used to filter and search for specific entries in Org files based on various criteria like tags, properties, and timestamps.
