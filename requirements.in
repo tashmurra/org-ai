@@ -1,0 +1,13 @@
+beautifulsoup4
+google-search-results
+langchain             # brings in langchain‑core/langsmith etc.
+langchain-ollama
+langchain-openai
+langchain_community
+langchain-text-splitters
+playwright
+orgparse
+python-lsp-server
+requests-oauthlib
+chromadb
+langchain_chroma
