@@ -5,7 +5,11 @@ from typing import List
 
 from langchain.globals import set_verbose
 from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain_core.prompts import ChatPromptTemplate, PromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    PromptTemplate,
+    MessagesPlaceholder,
+)
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.tools import BaseTool, Tool, StructuredTool
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -20,7 +24,8 @@ from langchain_community.tools.playwright.utils import (
 
 from config import OPENAI_API_KEY, SERP_API_KEY
 from index import search_index
-#from retrievers import NoteVectorStore
+
+# from retrievers import NoteVectorStore
 
 
 set_verbose(False)
@@ -47,10 +52,10 @@ NOTES_PROMPT = ChatPromptTemplate.from_template(NOTES_TEMPLATE)
 NOTES_CHAIN = create_stuff_documents_chain(
     ChatOpenAI(
         openai_api_key=OPENAI_API_KEY,
-        model_name="gpt-4o",
+        model_name="gpt-4.1",
         temperature=0,
     ),
-    NOTES_PROMPT
+    NOTES_PROMPT,
 )
 
 
@@ -60,15 +65,18 @@ def gpt_answer_notes(question: str) -> str:
     `src/index.py`.  No external service required.
     """
     # 1 · open the persistent vector store in ./index/
-    vector_store = search_index()  # Chroma instance defined in src/index.py :contentReference[oaicite:0]{index=0}
+    vector_store = (
+        search_index()
+    )  # Chroma instance defined in src/index.py :contentReference[oaicite:0]{index=0}
 
     # 2 · set up a retriever (top‑6 chunks is a good default)
     retriever = vector_store.as_retriever(search_kwargs={"k": 6})
 
-    # 3 · RAG chain → GPT‑4o for the final answer
+    # 3 · RAG chain → GPT‑4.1 for the final answer
     rag_chain = create_retrieval_chain(retriever, NOTES_CHAIN)
     result: str = rag_chain.invoke({"input": question})
     return result
+
 
 ORGQL_TEMPLATE = """
 You are an AI assistant designed to help convert natural language questions into org-ql queries for use with Org mode in Emacs. org-ql queries are used to filter and search for specific entries in Org files based on various criteria like tags, properties, and timestamps.
@@ -161,7 +169,7 @@ ORGQL_PROMPT = PromptTemplate(
 
 ORGQL_LLM = ChatOpenAI(
     openai_api_key=OPENAI_API_KEY,
-    model_name="gpt-4o",
+    model_name="gpt-4.1",
     temperature=0,
 )
 
@@ -175,12 +183,12 @@ def gpt_answer_orgql(question: str) -> str:
     # DANGER!!!
     template = """(message (with-output-to-string (princ (mapconcat 'identity {ORGQL} "\\n"))))"""
     command = [
-        'emacs',
-        '-l',
-        '$HOME/.emacs.d/init.el',
-        '--batch',
-        '--eval',
-        template.replace('{ORGQL}', org_ql_query)
+        "emacs",
+        "-l",
+        "$HOME/.emacs.d/init.el",
+        "--batch",
+        "--eval",
+        template.replace("{ORGQL}", org_ql_query),
     ]
     process = subprocess.run(command, capture_output=True, text=True)
     result: str = process.stderr
@@ -189,7 +197,7 @@ def gpt_answer_orgql(question: str) -> str:
 
 AGENT_LLM = ChatOpenAI(
     openai_api_key=OPENAI_API_KEY,
-    model_name="gpt-4o",
+    model_name="gpt-4.1",
     temperature=0,
 )
 
@@ -218,11 +226,16 @@ TOOLS: List[Tool | BaseTool] = [
     ),
 ]
 TOOLS += BROWSER_TOOLS
-MEMORY = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+MEMORY = ConversationBufferMemory(
+    memory_key="chat_history", return_messages=True
+)
 
 AGENT_PROMPT = ChatPromptTemplate.from_messages(
     [
-        ("system", "You are a helpful assistant. Always include your sources at the end of your response."),
+        (
+            "system",
+            "You are a helpful assistant. Always include your sources at the end of your response.",
+        ),
         MessagesPlaceholder("chat_history", optional=True),
         ("human", "{input}"),
         MessagesPlaceholder("agent_scratchpad"),
@@ -233,9 +246,7 @@ AGENT = create_openai_tools_agent(
     llm=AGENT_LLM,
     prompt=AGENT_PROMPT,
 )
-AGENT_EXECUTOR = AgentExecutor(
-    agent=AGENT, tools=TOOLS, memory=MEMORY
-)
+AGENT_EXECUTOR = AgentExecutor(agent=AGENT, tools=TOOLS, memory=MEMORY)
 
 
 class ChatCmd(cmd.Cmd):
@@ -247,7 +258,7 @@ class ChatCmd(cmd.Cmd):
 
     def default(self, line: str) -> None:
         answer = AGENT_EXECUTOR.invoke({"input": line})
-        print(answer['output'])
+        print(answer["output"])
         # Write your code here by handling the input entered
         self.commands.append(line)
 
