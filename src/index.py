@@ -1,6 +1,5 @@
 import os
 import sys
-import glob
 import re
 import hashlib
 from enum import Enum
@@ -112,7 +111,13 @@ def build_search_index_and_embeddings(path: str) -> None:
     Builds a search index based on vectors of embeddings.
     """
     documents = []
-    for filename in glob.glob(f"{path}/*.org"):
+    org_files: List[str] = []
+    for root_dir, _, files in os.walk(path):
+        for file in files:
+            if file.endswith(".org"):
+                org_files.append(os.path.join(root_dir, file))
+
+    for filename in org_files:
         id, title, tags, body, links = extract_note(filename)
 
         if not body:
@@ -219,8 +224,12 @@ def org_element_to_doc(
 
     # Normalize dates since they can be a datetime or a date
     created_date = orgdate_to_timestamp(date_list[0]) if date_list else None
-    deadline = orgdate_to_timestamp(element.deadline) if element.deadline else None
-    scheduled = orgdate_to_timestamp(element.scheduled) if element.scheduled else None
+    deadline = (
+        orgdate_to_timestamp(element.deadline) if element.deadline else None
+    )
+    scheduled = (
+        orgdate_to_timestamp(element.scheduled) if element.scheduled else None
+    )
 
     # Clean up tags from orgparse which doesn't split by space
     # Note: also includes tags from the parent element
