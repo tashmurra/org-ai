@@ -210,7 +210,7 @@ def openai_web_search(query: str) -> str:
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": query}],
-        tools=[{"type": "web_search"}],
+        tools=[{"type": "web-search"}],
     )
     return response.choices[0].message.content
 
