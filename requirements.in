@@ -1,5 +1,4 @@
 beautifulsoup4
-google-search-results
 langchain             # brings in langchain‑core/langsmith etc.
 langchain-ollama
 langchain-openai

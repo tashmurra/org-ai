@@ -16,4 +16,3 @@ OPENAI_EMBEDDING_MODEL = os.getenv(
 )
 
 
-SERP_API_KEY = os.getenv("SERP_API_KEY")
