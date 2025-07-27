@@ -206,11 +206,11 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 def openai_web_search(query: str) -> str:
-    """Use OpenAI's built-in web search tool."""
+    """Use OpenAI's built-in web search capability."""
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-search-preview",
         messages=[{"role": "user", "content": query}],
-        tools=[{"type": "web-search"}],
+        web_search_options={},
     )
     return response.choices[0].message.content
 
