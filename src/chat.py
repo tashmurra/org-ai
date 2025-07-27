@@ -16,13 +16,13 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_openai import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
-from langchain_community.utilities import SerpAPIWrapper
+from openai import OpenAI
 from langchain_community.agent_toolkits import PlayWrightBrowserToolkit
 from langchain_community.tools.playwright.utils import (
     create_sync_playwright_browser,
 )
 
-from config import OPENAI_API_KEY, SERP_API_KEY
+from config import OPENAI_API_KEY
 from index import search_index
 
 # from retrievers import NoteVectorStore
@@ -202,10 +202,17 @@ AGENT_LLM = ChatOpenAI(
 )
 
 
-SEARCH = SerpAPIWrapper(
-    serpapi_api_key=SERP_API_KEY,
-    search_engine="google",
-)
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+
+def openai_web_search(query: str) -> str:
+    """Use OpenAI's built-in web search capability."""
+    response = client.chat.completions.create(
+        model="gpt-4o-search-preview",
+        messages=[{"role": "user", "content": query}],
+        web_search_options={},
+    )
+    return response.choices[0].message.content
 
 
 TOOLS: List[Tool | BaseTool] = [
@@ -216,7 +223,7 @@ TOOLS: List[Tool | BaseTool] = [
     ),
     StructuredTool.from_function(
         name="Search",
-        func=SEARCH.run,
+        func=openai_web_search,
         description="Useful for when you need to answer questions about current events or the current state of the world. The input to this should be a single search term.",
     ),
     StructuredTool.from_function(
